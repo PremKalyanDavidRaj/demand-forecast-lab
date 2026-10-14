@@ -1,5 +1,7 @@
 # Demand Forecast Lab
 
+[![Tests](https://github.com/PremKalyanDavidRaj/demand-forecast-lab/actions/workflows/tests.yml/badge.svg)](https://github.com/PremKalyanDavidRaj/demand-forecast-lab/actions/workflows/tests.yml)
+
 A historical bike-rental forecasting application with chronological
 evaluation, empirical prediction intervals, a FastAPI service, and an
 interactive browser dashboard.
