@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demand Forecast Lab</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:#edf2fa;font:16px system-ui,sans-serif}
+main{max-width:1000px;margin:auto;padding:40px 20px}
+h1{margin-bottom:8px}
+p{line-height:1.6}
+.muted{color:#b5c4da}
+.panel{background:#19263b;border:1px solid #3d506d;border-radius:12px;padding:22px;margin:22px 0}
+input,button{font:inherit;padding:10px 14px;border-radius:7px}
+input{background:#fff;color:#172033;border:1px solid #8294b0}
+button{background:#9bc5ff;color:#122139;border:0;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+label{display:block;margin-bottom:10px}
+svg{width:100%;height:auto;display:block}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;text-align:right}
+th,td{padding:10px;border-bottom:1px solid #3d506d;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+a{color:#a9d0ff}
+.error{color:#ffb4b4}
+:focus-visible{outline:3px solid #ffd479;outline-offset:3px}
+</style>
+</head>
+<body>
+<main>
+<p class="muted">HISTORICAL DEMO · BIKE RENTAL DEMAND</p>
+<h1>Demand Forecast Lab</h1>
+<p class="muted">Explore 24 hourly forecasts from a seasonal baseline selected
+by validation MAE. Uses historical data, not a live demand feed.</p>
+
+<form id="form" class="panel">
+<label for="day">Forecast date</label>
+<input id="day" type="date" value="2012-11-01" required>
+<button id="button" disabled>Load forecast</button>
+<p id="range" class="muted"></p>
+<p id="status" role="status" aria-live="polite">Checking service…</p>
+</form>
+
+<section id="results" hidden>
+<div class="panel">
+<h2 id="heading">Hourly forecast</h2>
+<p id="summary"></p>
+<p class="muted">Blue line: forecast · Shaded band: nominal 90% hourly interval</p>
+<svg id="chart" viewBox="0 0 900 330" role="img"
+aria-label="Hourly rental forecast and prediction interval"></svg>
+<p class="muted">Horizontal axis: hour of day. Vertical axis: rentals per hour.
+Intervals do not guarantee 90% future coverage or simultaneous coverage
+of the whole day.</p>
+</div>
+<div class="panel scroll">
+<table>
+<caption>Hourly forecast values</caption>
+<thead><tr><th>Hour</th><th>Forecast</th><th>Lower</th><th>Upper</th><th>Source</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<p id="note" class="muted"></p>
+</section>
+<a href="/docs">API documentation</a>
+</main>
+<script>
+const day=document.getElementById("day");
+const button=document.getElementById("button");
+const status=document.getElementById("status");
+const results=document.getElementById("results");
+const chart=document.getElementById("chart");
+
+function svgElement(tag,attributes,text){
+  const element=document.createElementNS("http://www.w3.org/2000/svg",tag);
+  for(const [key,value] of Object.entries(attributes)){
+    element.setAttribute(key,String(value));
+  }
+  if(text!==undefined) element.textContent=text;
+  chart.appendChild(element);
+  return element;
+}
+
+function draw(rows){
+  chart.replaceChildren();
+  const max=Math.max(1,...rows.map(row=>row.upper))*1.05;
+  const x=i=>60+i*810/23;
+  const y=value=>280-value*250/max;
+
+  for(let step=0;step<=4;step++){
+    const value=max*step/4;
+    svgElement("line",{x1:60,y1:y(value),x2:870,y2:y(value),stroke:"#3d506d"});
+    svgElement("text",{x:50,y:y(value)+4,fill:"#b5c4da","text-anchor":"end","font-size":12},
+      Math.round(value));
+  }
+  for(const hour of [0,6,12,18,23]){
+    svgElement("text",{x:x(hour),y:305,fill:"#b5c4da","text-anchor":"middle"},
+      String(hour).padStart(2,"0")+":00");
+  }
+  const top=rows.map((row,i)=>`${x(i)},${y(row.upper)}`);
+  const bottom=rows.map((row,i)=>`${x(i)},${y(row.lower)}`).reverse();
+  svgElement("polygon",{points:[...top,...bottom].join(" "),fill:"#76aaff","fill-opacity":.2});
+  svgElement("polyline",{
+    points:rows.map((row,i)=>`${x(i)},${y(row.prediction)}`).join(" "),
+    fill:"none",stroke:"#9bc5ff","stroke-width":3
+  });
+}
+
+async function readResponse(response){
+  const data=await response.json();
+  if(!response.ok){
+    throw new Error(typeof data.detail==="string"?data.detail:"Request failed.");
+  }
+  return data;
+}
+
+document.getElementById("form").addEventListener("submit",async event=>{
+  event.preventDefault();
+  button.disabled=true;
+  results.hidden=true;
+  status.className="";
+  status.textContent="Calculating forecast…";
+  try{
+    const response=await fetch("/forecast",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({forecast_date:day.value})
+    });
+    const data=await readResponse(response);
+    const rows=data.forecast;
+    draw(rows);
+    document.getElementById("heading").textContent=`Forecast for ${data.forecast_date}`;
+    const total=rows.reduce((sum,row)=>sum+row.prediction,0);
+    document.getElementById("summary").textContent=
+      `Sum of hourly point forecasts: ${total.toFixed(0)} rentals.`;
+    const body=document.getElementById("rows");
+    body.replaceChildren();
+    for(const row of rows){
+      const tr=document.createElement("tr");
+      const values=[
+        row.timestamp.slice(11,16),
+        row.prediction.toFixed(1),
+        row.lower.toFixed(1),
+        row.upper.toFixed(1),
+        row.prediction_source.replaceAll("_"," ")
+      ];
+      for(const value of values){
+        const td=document.createElement("td");
+        td.textContent=value;
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    }
+    document.getElementById("note").textContent=data.note;
+    results.hidden=false;
+    status.textContent="Forecast loaded.";
+  }catch(error){
+    status.className="error";
+    status.textContent=error.message;
+  }finally{
+    button.disabled=false;
+  }
+});
+
+(async()=>{
+  try{
+    const health=await readResponse(await fetch("/health"));
+    day.min=health.first_forecast_date;
+    day.max=health.last_forecast_date;
+    day.value=health.first_forecast_date;
+    document.getElementById("range").textContent=
+      `Available dates: ${day.min} through ${day.max}`;
+    status.textContent="Choose a date and load its forecast.";
+    button.disabled=false;
+  }catch(error){
+    status.className="error";
+    status.textContent=error.message+" Reload this page after the service is ready.";
+  }
+})();
+</script>
+</body>
+</html>
