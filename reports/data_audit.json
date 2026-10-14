@@ -1,0 +1,31 @@
+{
+  "source": "data/raw/hour.csv",
+  "source_sha256": "e03de4ee4ef4dc376ac6e04bf829673c6269e8eba5c60fa121640fa2f829504f",
+  "rows": 17379,
+  "first_timestamp": "2011-01-01T00:00:00",
+  "last_timestamp": "2012-12-31T23:00:00",
+  "timestamps_in_nondecreasing_order": true,
+  "duplicate_timestamp_rows_beyond_first": 0,
+  "expected_hours_between_first_and_last": 17544,
+  "missing_hours_between_first_and_last": 165,
+  "first_10_missing_timestamps": [
+    "2011-01-02T05:00:00",
+    "2011-01-03T02:00:00",
+    "2011-01-03T03:00:00",
+    "2011-01-04T03:00:00",
+    "2011-01-05T03:00:00",
+    "2011-01-06T03:00:00",
+    "2011-01-07T03:00:00",
+    "2011-01-11T03:00:00",
+    "2011-01-11T04:00:00",
+    "2011-01-12T03:00:00"
+  ],
+  "observed_calendar_days": 731,
+  "observed_days_with_fewer_than_24_hours": 76,
+  "empty_cells": 0,
+  "minimum_rental_count": 1,
+  "maximum_rental_count": 977,
+  "negative_count_rows": 0,
+  "target_component_mismatch_rows": 0,
+  "note": "Structural audit only; no forecasting model or evaluation. Raw files unchanged. Timestamps use dataset date/hour labels without timezone conversion. Missing hours are not assumed to represent zero rentals."
+}
