@@ -1,0 +1,21 @@
+{
+  "evaluation_split": "test",
+  "model_type": "weekly_baseline",
+  "first_timestamp": "2012-11-01T00:00:00",
+  "last_timestamp": "2012-12-31T23:00:00",
+  "expected_calendar_hours": 1464,
+  "observed_target_hours_scored": 1460,
+  "missing_target_hours_not_scored": 4,
+  "mae": 73.39931506849315,
+  "rmse": 120.07119748613081,
+  "nominal_interval_coverage": 0.9,
+  "observed_interval_coverage": 0.8684931506849315,
+  "mean_interval_width": 286.93698630136987,
+  "below_lower_bound_rows": 123,
+  "above_upper_bound_rows": 69,
+  "weekly_lag_missing_rows": 39,
+  "training_median_fallback_rows": 0,
+  "model_sha256": "79cf5d1a30beb393477a75eb41bdd09ecead0f6c9c2a00cc10c32aaeb48b9e10",
+  "features_sha256": "96315ccaa08cdd8fead2bdda722ba598676591c59a8920410b641f23004941b6",
+  "scope": "Frozen forecast rule and interval margin. Daily rolling-origin evaluation; earlier observed test counts can become history for later days. No same-day actuals enter that day's features. Missing targets excluded. Coverage is pooled over observed hours, not simultaneous coverage of an entire day."
+}
