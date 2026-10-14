@@ -46,9 +46,9 @@ by validation MAE. Uses historical data, not a live demand feed.</p>
 <div class="panel">
 <h2 id="heading">Hourly forecast</h2>
 <p id="summary"></p>
-<p class="muted">Blue line: forecast · Shaded band: nominal 90% hourly interval</p>
+<p class="muted">Blue: forecast · Orange: actual demand · Shaded band: nominal 90% hourly interval</p>
 <svg id="chart" viewBox="0 0 900 330" role="img"
-aria-label="Hourly rental forecast and prediction interval"></svg>
+aria-label="Hourly forecast, actual demand, and prediction interval"></svg>
 <p class="muted">Horizontal axis: hour of day. Vertical axis: rentals per hour.
 Intervals do not guarantee 90% future coverage or simultaneous coverage
 of the whole day.</p>
@@ -56,7 +56,7 @@ of the whole day.</p>
 <div class="panel scroll">
 <table>
 <caption>Hourly forecast values</caption>
-<thead><tr><th>Hour</th><th>Forecast</th><th>Lower</th><th>Upper</th><th>Source</th></tr></thead>
+<thead><tr><th>Hour</th><th>Forecast</th><th>Actual</th><th>Lower</th><th>Upper</th><th>Source</th></tr></thead>
 <tbody id="rows"></tbody>
 </table>
 </div>
@@ -83,7 +83,11 @@ function svgElement(tag,attributes,text){
 
 function draw(rows){
   chart.replaceChildren();
-  const max=Math.max(1,...rows.map(row=>row.upper))*1.05;
+  const max=Math.max(
+    1,
+    ...rows.map(row=>row.upper),
+    ...rows.filter(row=>row.actual!==null).map(row=>row.actual)
+  )*1.05;
   const x=i=>60+i*810/23;
   const y=value=>280-value*250/max;
 
@@ -104,6 +108,39 @@ function draw(rows){
     points:rows.map((row,i)=>`${x(i)},${y(row.prediction)}`).join(" "),
     fill:"none",stroke:"#9bc5ff","stroke-width":3
   });
+}
+
+function drawActuals(rows){
+  const max=Math.max(
+    1,
+    ...rows.map(row=>row.upper),
+    ...rows.filter(row=>row.actual!==null).map(row=>row.actual)
+  )*1.05;
+  const x=i=>60+i*810/23;
+  const y=value=>280-value*250/max;
+  let segment=[];
+
+  function flush(){
+    if(segment.length>1){
+      svgElement("polyline",{
+        points:segment.join(" "),fill:"none",
+        stroke:"#ffb86b","stroke-width":3
+      });
+    }
+    segment=[];
+  }
+
+  rows.forEach((row,i)=>{
+    if(row.actual===null){
+      flush();
+      return;
+    }
+    segment.push(`${x(i)},${y(row.actual)}`);
+    svgElement("circle",{
+      cx:x(i),cy:y(row.actual),r:3,fill:"#ffb86b"
+    });
+  });
+  flush();
 }
 
 async function readResponse(response){
@@ -127,12 +164,45 @@ document.getElementById("form").addEventListener("submit",async event=>{
       body:JSON.stringify({forecast_date:day.value})
     });
     const data=await readResponse(response);
-    const rows=data.forecast;
+    let actuals=null;
+    let actualsError=false;
+    try{
+      actuals=await readResponse(await fetch(
+        "/actuals?forecast_date="+encodeURIComponent(data.forecast_date)
+      ));
+    }catch(error){
+      actualsError=true;
+    }
+
+    const observedByTime=new Map(
+      (actuals?.actuals || []).map(item=>[item.timestamp,item.actual])
+    );
+    const rows=data.forecast.map(row=>({
+      ...row,
+      actual:observedByTime.get(row.timestamp) ?? null
+    }));
     draw(rows);
+    drawActuals(rows);
     document.getElementById("heading").textContent=`Forecast for ${data.forecast_date}`;
     const total=rows.reduce((sum,row)=>sum+row.prediction,0);
-    document.getElementById("summary").textContent=
-      `Sum of hourly point forecasts: ${total.toFixed(0)} rentals.`;
+    let summary=`Sum of hourly point forecasts: ${total.toFixed(0)} rentals.`;
+    const observed=rows.filter(row=>row.actual!==null);
+    if(observed.length){
+      const mae=observed.reduce(
+        (sum,row)=>sum+Math.abs(row.actual-row.prediction),0
+      )/observed.length;
+      const covered=observed.filter(
+        row=>row.actual>=row.lower && row.actual<=row.upper
+      ).length;
+      summary+=` Retrospective MAE: ${mae.toFixed(1)} rentals/hour.`;
+      summary+=` Interval coverage: ${(100*covered/observed.length).toFixed(1)}%`;
+      summary+=` across ${observed.length}/24 observed hours.`;
+    }else{
+      summary+=actualsError
+        ? " Actual observations could not be loaded."
+        : " No actual observations are available for this date.";
+    }
+    document.getElementById("summary").textContent=summary;
     const body=document.getElementById("rows");
     body.replaceChildren();
     for(const row of rows){
@@ -140,6 +210,7 @@ document.getElementById("form").addEventListener("submit",async event=>{
       const values=[
         row.timestamp.slice(11,16),
         row.prediction.toFixed(1),
+        row.actual===null ? "Missing" : row.actual.toFixed(1),
         row.lower.toFixed(1),
         row.upper.toFixed(1),
         row.prediction_source.replaceAll("_"," ")
@@ -153,7 +224,9 @@ document.getElementById("form").addEventListener("submit",async event=>{
     }
     document.getElementById("note").textContent=data.note;
     results.hidden=false;
-    status.textContent="Forecast loaded.";
+    status.textContent=actualsError
+      ? "Forecast loaded, but actual observations could not be loaded."
+      : "Forecast and historical comparison loaded.";
   }catch(error){
     status.className="error";
     status.textContent=error.message;
