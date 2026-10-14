@@ -113,3 +113,55 @@ def demo():
 
     page = Path(__file__).resolve().parents[1] / "static" / "index.html"
     return FileResponse(page)
+
+
+class ActualHour(BaseModel):
+    timestamp: datetime
+    actual: float | None
+
+
+class ActualsResponse(BaseModel):
+    forecast_date: date
+    observed_hours: int
+    actuals: list[ActualHour]
+    note: str
+
+
+@app.get("/actuals", response_model=ActualsResponse)
+def actuals(forecast_date: date, request: Request):
+    import pandas as pd
+
+    service = get_service(request)
+
+    if not (
+        service.first_date.date()
+        <= forecast_date
+        <= service.last_date.date()
+    ):
+        raise HTTPException(
+            422,
+            f"Choose a date from {service.first_date.date()} "
+            f"through {service.last_date.date()}.",
+        )
+
+    hours = pd.date_range(
+        pd.Timestamp(forecast_date), periods=24, freq="h"
+    )
+    counts = service.history["cnt"].reindex(hours)
+
+    return {
+        "forecast_date": forecast_date,
+        "observed_hours": int(counts.notna().sum()),
+        "actuals": [
+            {
+                "timestamp": timestamp,
+                "actual": None if pd.isna(value) else float(value),
+            }
+            for timestamp, value in counts.items()
+        ],
+        "note": (
+            "Historical observations for retrospective comparison only. "
+            "Missing observations are null, not zero. These values are "
+            "not passed into the forecast calculation."
+        ),
+    }
