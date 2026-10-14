@@ -1,0 +1,44 @@
+{
+  "evaluation_split": "validation",
+  "selection_metric": "mae",
+  "validation_rows": 1488,
+  "configuration": {
+    "loss": "squared_error",
+    "learning_rate": 0.05,
+    "max_iter": 200,
+    "max_leaf_nodes": 15,
+    "min_samples_leaf": 30,
+    "l2_regularization": 1.0,
+    "early_stopping": false,
+    "random_state": 42
+  },
+  "baseline_fallback_training_median": 129.0,
+  "features_sha256": "96315ccaa08cdd8fead2bdda722ba598676591c59a8920410b641f23004941b6",
+  "results": [
+    {
+      "name": "weekly_baseline",
+      "training_rows": 0,
+      "mae": 53.2130376344086,
+      "rmse": 90.3956915366385
+    },
+    {
+      "name": "recent_2012_direct",
+      "training_rows": 4358,
+      "mae": 59.17679412068667,
+      "rmse": 84.23613936618453
+    },
+    {
+      "name": "weekly_residual",
+      "training_rows": 12679,
+      "mae": 62.30731573535338,
+      "rmse": 87.8303814226686
+    },
+    {
+      "name": "original_direct",
+      "training_rows": 12679,
+      "mae": 68.14818467772926,
+      "rmse": 93.01391767726558
+    }
+  ],
+  "note": "Development comparison on the same validation period. Not an independent final benchmark. Saved model unchanged. Calibration and test splits not scored."
+}
