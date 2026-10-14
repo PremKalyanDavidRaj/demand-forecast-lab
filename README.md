@@ -9,6 +9,8 @@ deploys the approach selected by validation mean absolute error.
 
 ## Browser demo
 
+![Demand forecast dashboard comparing forecasts with actual demand](docs/demo.png)
+
 Select a historical date to display:
 
 - 24 hourly demand forecasts.
