@@ -1,0 +1,26 @@
+{
+  "model_type": "weekly_baseline",
+  "training_median": 129.0,
+  "training_end": "2012-06-30T23:00:00",
+  "forecast_horizon_hours": 24,
+  "forecast_origin": "start of each calendar day",
+  "required_features": [
+    "lag_168",
+    "lag_24"
+  ],
+  "fallback_order": [
+    "same hour last week",
+    "same hour yesterday",
+    "training target median"
+  ],
+  "selection_metric": "validation MAE",
+  "selected_validation_metrics": {
+    "name": "weekly_baseline",
+    "training_rows": 0,
+    "mae": 53.2130376344086,
+    "rmse": 90.3956915366385
+  },
+  "features_sha256": "96315ccaa08cdd8fead2bdda722ba598676591c59a8920410b641f23004941b6",
+  "comparison_sha256": "e64513c67de0a11f4765d08812a3b1ded9beb38d889c67277d1843dd4a2c4d38",
+  "note": "Selected using validation only. Calibration and test scoring have not been performed. Experimental gradient-boosting artifact is not the selected forecasting approach."
+}
