@@ -1,0 +1,48 @@
+{
+  "input_sha256": "f5dcd3c20d41974e6dc656a472ec2795549d55d1b7a836e030e4b51ef016a8fa",
+  "output_sha256": "96315ccaa08cdd8fead2bdda722ba598676591c59a8920410b641f23004941b6",
+  "feature_columns": [
+    "hour_sin",
+    "hour_cos",
+    "weekday_sin",
+    "weekday_cos",
+    "month_sin",
+    "month_cos",
+    "is_weekend",
+    "trend_days",
+    "lag_24",
+    "lag_48",
+    "lag_168",
+    "lag_336"
+  ],
+  "lag_hours": [
+    24,
+    48,
+    168,
+    336
+  ],
+  "rows": 17055,
+  "rows_by_split": {
+    "train": 12679,
+    "validation": 1488,
+    "test": 1460,
+    "calibration": 1428
+  },
+  "missing_target_rows_excluded_after_warmup": 153,
+  "missing_values_by_feature": {
+    "hour_sin": 0,
+    "hour_cos": 0,
+    "weekday_sin": 0,
+    "weekday_cos": 0,
+    "month_sin": 0,
+    "month_cos": 0,
+    "is_weekend": 0,
+    "trend_days": 0,
+    "lag_24": 131,
+    "lag_48": 145,
+    "lag_168": 138,
+    "lag_336": 145
+  },
+  "evaluation_design": "Daily rolling forecast origins. Earlier observed validation or test counts may become history for later forecast days. No actual counts from the forecast day enter its features.",
+  "note": "No model fitting or scoring performed. Missing lag values are retained. This is not a single forecast of the entire validation or test period."
+}
