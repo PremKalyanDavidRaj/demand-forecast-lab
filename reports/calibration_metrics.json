@@ -1,0 +1,11 @@
+{
+  "split": "calibration",
+  "rows": 1428,
+  "nominal_coverage": 0.9,
+  "absolute_error_margin": 170.0,
+  "calibration_mae": 64.40126050420169,
+  "calibration_coverage": 0.9012605042016807,
+  "mean_interval_width": 299.37885154061627,
+  "calibrated_artifact_sha256": "79cf5d1a30beb393477a75eb41bdd09ecead0f6c9c2a00cc10c32aaeb48b9e10",
+  "note": "Coverage measured on the same data used to choose the margin. This is a calibration diagnostic, not independent evidence of future coverage. Test period not scored."
+}
