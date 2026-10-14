@@ -1,0 +1,32 @@
+{
+  "evaluation_split": "validation",
+  "training_rows": 12679,
+  "validation_rows": 1488,
+  "baseline": {
+    "mae": 53.2130376344086,
+    "rmse": 90.3956915366385
+  },
+  "gradient_boosting": {
+    "mae": 68.14818467772926,
+    "rmse": 93.01391767726558
+  },
+  "mae_improvement_percent": -28.06670640742242,
+  "baseline_weekly_lag_missing_rows": 0,
+  "baseline_training_median_fallback_rows": 0,
+  "training_seconds": 0.683,
+  "configuration": {
+    "loss": "squared_error",
+    "learning_rate": 0.05,
+    "max_iter": 200,
+    "max_leaf_nodes": 15,
+    "min_samples_leaf": 30,
+    "l2_regularization": 1.0,
+    "early_stopping": false,
+    "random_state": 42
+  },
+  "python_version": "3.13.1",
+  "sklearn_version": "1.9.1",
+  "features_sha256": "96315ccaa08cdd8fead2bdda722ba598676591c59a8920410b641f23004941b6",
+  "model_sha256": "ec4b72b0f95832a454eb8babba912e6cf8851758c64215a8cc082193c80d7fea",
+  "scope": "Daily rolling-origin validation forecasts with a fixed model. Both methods scored on the same observed target hours. Calibration and test splits were not scored. Errors are measured in rentals per hour."
+}
